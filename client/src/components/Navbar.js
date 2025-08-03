@@ -1,10 +1,38 @@
-import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { User, Settings, BarChart3, LogOut, ChevronDown } from 'lucide-react';
 
 const Navbar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef(null);
+
+  const handleLogout = () => {
+    // Clear any stored user data (if using localStorage)
+    localStorage.removeItem('user');
+    localStorage.removeItem('isLoggedIn');
+    
+    // Close dropdown
+    setShowDropdown(false);
+    
+    // Redirect to login page
+    navigate('/');
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const navItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '📊' },
@@ -36,7 +64,7 @@ const Navbar = () => {
             ))}
           </ul>
 
-          <div className="navbar-user">
+          <div className="navbar-user" ref={dropdownRef}>
             <div 
               className="user-dropdown"
               onClick={() => setShowDropdown(!showDropdown)}
@@ -62,7 +90,7 @@ const Navbar = () => {
                   Settings
                 </Link>
                 <div className="dropdown-divider"></div>
-                <button className="dropdown-item logout">
+                <button className="dropdown-item logout" onClick={handleLogout}>
                   <LogOut size={16} />
                   Logout
                 </button>

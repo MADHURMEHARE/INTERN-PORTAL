@@ -61,10 +61,12 @@ A sophisticated full-stack intern dashboard built with the MERN stack (MongoDB, 
 
 ### **Backend**
 - **Node.js** with Express.js framework
+- **MongoDB** with Mongoose ODM for data persistence
 - **RESTful API** with comprehensive endpoints
 - **CORS** enabled for cross-origin requests
-- **Modular Architecture** with organized routes
+- **Modular Architecture** with organized routes and models
 - **Error Handling** with proper HTTP status codes
+- **Database Seeding** for initial data setup
 
 ### **Advanced Features**
 - **Real-time Data Updates** with optimistic UI
@@ -78,6 +80,7 @@ A sophisticated full-stack intern dashboard built with the MERN stack (MongoDB, 
 ### Prerequisites
 - Node.js (v14 or higher)
 - npm or yarn
+- MongoDB (local installation or MongoDB Atlas)
 
 ### Installation
 
@@ -96,6 +99,28 @@ A sophisticated full-stack intern dashboard built with the MERN stack (MongoDB, 
    cd client
    npm install
    cd ..
+   ```
+
+3. **Set up environment variables**
+   ```bash
+   # Create .env file in the root directory
+   echo "NODE_ENV=development" > .env
+   echo "PORT=5000" >> .env
+   echo "MONGO_URI=mongodb://localhost:27017/intern-portal" >> .env
+   ```
+
+4. **Start MongoDB**
+   ```bash
+   # If using local MongoDB
+   mongod
+   
+   # Or use MongoDB Atlas (cloud)
+   # Update MONGO_URI in .env with your Atlas connection string
+   ```
+
+5. **Seed the database**
+   ```bash
+   npm run seed
    ```
 
 3. **Run the application**

@@ -265,6 +265,13 @@ code {
 
 .dropdown-item.logout {
   color: #dc3545;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dropdown-item.logout:hover {
+  background-color: #f8d7da;
+  color: #721c24;
 }
 
 .dropdown-item.logout:hover {

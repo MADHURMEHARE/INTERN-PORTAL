@@ -18,8 +18,16 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Dummy authentication - just redirect to dashboard
+    // Dummy authentication - store login state
     console.log(`${isSignup ? 'Signup' : 'Login'} with:`, formData);
+    
+    // Store authentication state
+    localStorage.setItem('isLoggedIn', 'true');
+    localStorage.setItem('user', JSON.stringify({
+      email: formData.email,
+      name: formData.email.split('@')[0] // Use email prefix as name
+    }));
+    
     navigate('/dashboard');
   };
 

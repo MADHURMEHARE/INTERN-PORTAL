@@ -10,7 +10,8 @@
     "dev": "concurrently \"npm run server\" \"npm run client\"",
     "install-client": "cd client && npm install",
     "build": "cd client && npm run build",
-    "heroku-postbuild": "npm run install-client && npm run build"
+    "heroku-postbuild": "npm run install-client && npm run build",
+    "seed": "node -e \"require('./server/data/seedData').seedDatabase()\""
   },
   "keywords": ["mern", "intern-portal", "fullstack"],
   "author": "Your Name",
