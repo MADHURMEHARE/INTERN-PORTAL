@@ -1,329 +1,182 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { User, Mail, Phone, MapPin, Calendar, Award, Edit, Save, X } from 'lucide-react';
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [editedProfile, setEditedProfile] = useState({});
 
   useEffect(() => {
-    fetchProfile();
+    // Fetch dummy profile data
+    const dummyProfile = {
+      name: "John Doe",
+      email: "john@example.com",
+      phone: "+91 9876543210",
+      skills: ["JavaScript", "React", "Node.js"],
+      referralCode: "REF1234",
+      totalDonations: 2500,
+      achievements: [
+        { title: "Top Performer", date: "2024-10-05" },
+        { title: "Code Sprint Winner", date: "2025-03-22" }
+      ]
+    };
+
+    setProfile(dummyProfile);
+    setEditedProfile(dummyProfile);
   }, []);
 
-  const fetchProfile = async () => {
-    try {
-      // Get the first intern from the database (or use a specific ID)
-      const response = await axios.get('/api/interns');
-      if (response.data && response.data.length > 0) {
-        const internData = response.data[0]; // Get the first intern
-        setProfile(internData);
-        setEditedProfile(internData);
-      } else {
-        throw new Error('No interns found');
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-      // Fallback data
-      const fallbackProfile = {
-        _id: "fallback-id",
-        name: "John Doe",
-        email: "john.doe@example.com",
-        phone: "+1 (555) 123-4567",
-        location: "San Francisco, CA",
-        joinDate: "2024-01-15",
-        bio: "Passionate intern with a drive for excellence and innovation. Always eager to learn and contribute to meaningful projects.",
-        skills: ["JavaScript", "React", "Node.js", "Python", "MongoDB"],
-        achievements: [
-          { id: 1, title: "Top Performer", description: "Achieved highest donation target", date: "2024-02-15", icon: "🏆" },
-          { id: 2, title: "Team Player", description: "Collaborated on 5+ projects", date: "2024-01-30", icon: "🤝" },
-          { id: 3, title: "Innovation Award", description: "Proposed 3 new features", date: "2024-01-20", icon: "💡" }
-        ],
-        referralCode: "johndoe2025",
-        totalDonations: 1250,
-        rank: 1
-      };
-      setProfile(fallbackProfile);
-      setEditedProfile(fallbackProfile);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
-
-  const handleSave = async () => {
-    try {
-      // Check if we have a valid MongoDB ID
-      if (!profile._id || profile._id === 'fallback-id') {
-        showNotification('Cannot update profile: No valid user ID', 'error');
-        return;
-      }
-
-      // Update profile via API
-      const response = await axios.put(`/api/interns/${profile._id}/profile`, {
-        name: editedProfile.name,
-        email: editedProfile.email,
-        phone: editedProfile.phone,
-        location: editedProfile.location,
-        bio: editedProfile.bio,
-        skills: editedProfile.skills
-      });
-      
-      // Update local state with the response from server
-      setProfile(response.data);
-      setEditedProfile(response.data);
-      setIsEditing(false);
-      showNotification('Profile updated successfully!', 'success');
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      showNotification('Failed to update profile', 'error');
-    }
-  };
-
-  const handleCancel = () => {
-    setEditedProfile(profile);
+  const handleEdit = () => setIsEditing(true);
+  const handleSave = () => {
+    setProfile(editedProfile);
     setIsEditing(false);
   };
 
-  const handleInputChange = (field, value) => {
-    setEditedProfile(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setEditedProfile((prev) => ({ ...prev, [name]: value }));
   };
 
-  const showNotification = (message, type) => {
-    // Simple notification - in a real app, you'd use a proper notification system
-    alert(message);
+  const copyReferralCode = () => {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(profile.referralCode)
+        .then(() => alert("Referral code copied!"))
+        .catch(() => alert("Failed to copy code"));
+    } else {
+      const tempInput = document.createElement('input');
+      tempInput.value = profile.referralCode;
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      document.execCommand('copy');
+      document.body.removeChild(tempInput);
+      alert("Referral code copied (fallback)!");
+    }
   };
 
-  if (loading) {
-    return (
-      <div style={{ textAlign: 'center', padding: '50px' }}>
-        <div className="loading-spinner"></div>
-        <p>Loading profile...</p>
-      </div>
-    );
-  }
+  if (!profile) return <div>Loading...</div>;
 
   return (
-    <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-        <h1 style={{ color: 'white', margin: 0 }}>👤 Profile</h1>
-        {!isEditing ? (
-          <button onClick={handleEdit} className="btn">
-            <Edit size={16} style={{ marginRight: '8px' }} />
-            Edit Profile
-          </button>
+    <div style={styles.container}>
+      <div style={styles.card}>
+        <img
+          src={`https://placehold.co/120x120/667eea/FFFFFF?text=${profile.name?.split(' ').map(n => n[0]).join('')}`}
+          alt="Profile"
+          style={styles.image}
+        />
+        {isEditing ? (
+          <>
+            <input name="name" value={editedProfile.name} onChange={handleChange} style={styles.input} />
+            <input name="email" value={editedProfile.email} onChange={handleChange} style={styles.input} />
+            <input name="phone" value={editedProfile.phone} onChange={handleChange} style={styles.input} />
+            <button onClick={handleSave} style={styles.button}>Save</button>
+          </>
         ) : (
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={handleSave} className="btn btn-success">
-              <Save size={16} style={{ marginRight: '8px' }} />
-              Save
-            </button>
-            <button onClick={handleCancel} className="btn btn-secondary">
-              <X size={16} style={{ marginRight: '8px' }} />
-              Cancel
-            </button>
-          </div>
+          <>
+            <h2 style={styles.name}>{profile.name}</h2>
+            <p>{profile.email}</p>
+            <p>{profile.phone}</p>
+            <button onClick={handleEdit} style={styles.button}>Edit</button>
+          </>
         )}
-      </div>
 
-      <div className="grid">
-        {/* Profile Card */}
-        <div className="card">
-          <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-            <img 
-              src="https://via.placeholder.com/120/667eea/FFFFFF?text=JD" 
-              alt="Profile"
-              style={{ 
-                width: '120px', 
-                height: '120px', 
-                borderRadius: '50%', 
-                border: '4px solid #667eea',
-                marginBottom: '16px'
-              }}
-            />
-            <h2>{profile.name}</h2>
-            <p style={{ color: '#6c757d', marginBottom: '16px' }}>Intern</p>
-            
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '16px' }}>
-              <div style={{ textAlign: 'center' }}>
-                <h3 style={{ color: '#667eea', margin: 0 }}>#{profile.rank}</h3>
-                <p style={{ fontSize: '14px', color: '#6c757d', margin: 0 }}>Rank</p>
-              </div>
-              <div style={{ textAlign: 'center' }}>
-                <h3 style={{ color: '#28a745', margin: 0 }}>${profile.totalDonations.toLocaleString()}</h3>
-                <p style={{ fontSize: '14px', color: '#6c757d', margin: 0 }}>Raised</p>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <h4 style={{ marginBottom: '12px', color: '#667eea' }}>About</h4>
-            {isEditing ? (
-              <textarea
-                value={editedProfile.bio}
-                onChange={(e) => handleInputChange('bio', e.target.value)}
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  border: '1px solid #dee2e6',
-                  borderRadius: '8px',
-                  minHeight: '100px',
-                  resize: 'vertical'
-                }}
-              />
-            ) : (
-              <p style={{ color: '#6c757d', lineHeight: '1.6' }}>{profile.bio}</p>
-            )}
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <h4 style={{ marginBottom: '12px', color: '#667eea' }}>Contact Information</h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Mail size={16} color="#667eea" />
-                {isEditing ? (
-                  <input
-                    type="email"
-                    value={editedProfile.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    style={{ flex: 1, padding: '8px', border: '1px solid #dee2e6', borderRadius: '4px' }}
-                  />
-                ) : (
-                  <span>{profile.email}</span>
-                )}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Phone size={16} color="#667eea" />
-                {isEditing ? (
-                  <input
-                    type="tel"
-                    value={editedProfile.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                    style={{ flex: 1, padding: '8px', border: '1px solid #dee2e6', borderRadius: '4px' }}
-                  />
-                ) : (
-                  <span>{profile.phone}</span>
-                )}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <MapPin size={16} color="#667eea" />
-                {isEditing ? (
-                  <input
-                    type="text"
-                    value={editedProfile.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
-                    style={{ flex: 1, padding: '8px', border: '1px solid #dee2e6', borderRadius: '4px' }}
-                  />
-                ) : (
-                  <span>{profile.location}</span>
-                )}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Calendar size={16} color="#667eea" />
-                <span>Joined {new Date(profile.joinDate).toLocaleDateString()}</span>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h4 style={{ marginBottom: '12px', color: '#667eea' }}>Skills</h4>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {profile.skills.map((skill, index) => (
-                <span 
-                  key={index}
-                  style={{
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    padding: '6px 12px',
-                    borderRadius: '20px',
-                    fontSize: '14px',
-                    fontWeight: '500'
-                  }}
-                >
-                  {skill}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Achievements Card */}
-        <div className="card">
-          <h3 style={{ marginBottom: '20px', color: '#667eea' }}>
-            <Award size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-            Achievements
-          </h3>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {profile.achievements.map((achievement) => (
-              <div 
-                key={achievement.id}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '16px',
-                  padding: '16px',
-                  background: '#f8f9fa',
-                  borderRadius: '8px',
-                  border: '1px solid #dee2e6'
-                }}
-              >
-                <div style={{ fontSize: '24px' }}>{achievement.icon}</div>
-                <div style={{ flex: 1 }}>
-                  <h4 style={{ margin: '0 0 4px 0', color: '#495057' }}>{achievement.title}</h4>
-                  <p style={{ margin: '0 0 4px 0', fontSize: '14px', color: '#6c757d' }}>
-                    {achievement.description}
-                  </p>
-                  <small style={{ color: '#6c757d' }}>
-                    {new Date(achievement.date).toLocaleDateString()}
-                  </small>
-                </div>
-              </div>
+        <div style={styles.section}>
+          <h3>Skills</h3>
+          <div style={styles.skills}>
+            {Array.isArray(profile.skills) && profile.skills.map((skill, i) => (
+              <span key={i} style={styles.badge}>{skill}</span>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Referral Code Card */}
-      <div className="card">
-        <h3 style={{ marginBottom: '20px', color: '#667eea' }}>Your Referral Code</h3>
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '16px',
-          padding: '16px',
-          background: '#f8f9fa',
-          borderRadius: '8px',
-          border: '1px solid #dee2e6'
-        }}>
-          <code style={{ 
-            fontSize: '18px', 
-            fontWeight: 'bold', 
-            color: '#667eea',
-            flex: 1
-          }}>
-            {profile.referralCode}
-          </code>
-          <button 
-            onClick={() => {
-              navigator.clipboard.writeText(profile.referralCode);
-              showNotification('Referral code copied!', 'success');
-            }}
-            className="btn"
-          >
-            Copy
-          </button>
+        <div style={styles.section}>
+          <h3>Referral Code</h3>
+          <div>
+            <code>{profile.referralCode}</code>
+            <button onClick={copyReferralCode} style={{ ...styles.button, marginLeft: 10 }}>Copy</button>
+          </div>
+        </div>
+
+        <div style={styles.section}>
+          <h3>Total Donations</h3>
+          <h3 style={{ color: '#28a745' }}>
+            ${profile?.totalDonations?.toLocaleString?.() || 0}
+          </h3>
+        </div>
+
+        <div style={styles.section}>
+          <h3>Achievements</h3>
+          {Array.isArray(profile.achievements) && profile.achievements.map((a, i) => (
+            <div key={i} style={styles.achievement}>
+              <h4>{a.title}</h4>
+              <p>{new Date(a.date).toLocaleDateString()}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
   );
 };
 
-export default Profile; 
+// 🎨 Simple inline styles
+const styles = {
+  container: {
+    padding: 20,
+    display: 'flex',
+    justifyContent: 'center'
+  },
+  card: {
+    background: '#fff',
+    borderRadius: 10,
+    padding: 30,
+    maxWidth: 500,
+    width: '100%',
+    boxShadow: '0 0 10px rgba(0,0,0,0.1)',
+    textAlign: 'center'
+  },
+  image: {
+    borderRadius: '50%',
+    width: 120,
+    height: 120,
+    marginBottom: 20
+  },
+  name: {
+    margin: 0
+  },
+  input: {
+    padding: 8,
+    margin: '5px 0',
+    width: '100%',
+    borderRadius: 5,
+    border: '1px solid #ccc'
+  },
+  button: {
+    padding: '8px 16px',
+    marginTop: 10,
+    background: '#007bff',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 5,
+    cursor: 'pointer'
+  },
+  section: {
+    marginTop: 30,
+    textAlign: 'left'
+  },
+  skills: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 10
+  },
+  badge: {
+    background: '#eee',
+    borderRadius: 5,
+    padding: '5px 10px'
+  },
+  achievement: {
+    background: '#f9f9f9',
+    padding: 10,
+    borderRadius: 5,
+    marginBottom: 10
+  }
+};
+
+export default Profile;
