@@ -14,13 +14,20 @@ const Profile = () => {
 
   const fetchProfile = async () => {
     try {
-      const response = await axios.get('/api/interns/1');
-      setProfile(response.data);
-      setEditedProfile(response.data);
+      // Get the first intern from the database (or use a specific ID)
+      const response = await axios.get('/api/interns');
+      if (response.data && response.data.length > 0) {
+        const internData = response.data[0]; // Get the first intern
+        setProfile(internData);
+        setEditedProfile(internData);
+      } else {
+        throw new Error('No interns found');
+      }
     } catch (error) {
+      console.error('Error fetching profile:', error);
       // Fallback data
       const fallbackProfile = {
-        id: 1,
+        _id: "fallback-id",
         name: "John Doe",
         email: "john.doe@example.com",
         phone: "+1 (555) 123-4567",
@@ -50,11 +57,29 @@ const Profile = () => {
 
   const handleSave = async () => {
     try {
-      // In a real app, you would update the profile via API
-      setProfile(editedProfile);
+      // Check if we have a valid MongoDB ID
+      if (!profile._id || profile._id === 'fallback-id') {
+        showNotification('Cannot update profile: No valid user ID', 'error');
+        return;
+      }
+
+      // Update profile via API
+      const response = await axios.put(`/api/interns/${profile._id}/profile`, {
+        name: editedProfile.name,
+        email: editedProfile.email,
+        phone: editedProfile.phone,
+        location: editedProfile.location,
+        bio: editedProfile.bio,
+        skills: editedProfile.skills
+      });
+      
+      // Update local state with the response from server
+      setProfile(response.data);
+      setEditedProfile(response.data);
       setIsEditing(false);
       showNotification('Profile updated successfully!', 'success');
     } catch (error) {
+      console.error('Error updating profile:', error);
       showNotification('Failed to update profile', 'error');
     }
   };
